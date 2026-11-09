@@ -7,19 +7,14 @@ export interface Task{
     name: string,
     status: Status,
     priority: Priority,
+    dueDate?: Date,
     tags: readonly string[],
 }
 
-export function isPriority(value: string): boolean{
-    if (value === 'low' || value === 'medium' || value === 'high'){
-        return true;
-    }
-    return false;
+export function isPriority(value: string): value is Priority{
+    return value === 'low' || value === 'medium' || value === 'high';
 }
 
-export function isStatus(value: string): boolean{
-    if(value === 'toDo' || value === 'inProgress' || value === 'done'){
-        return true;
-    }
-    return false;
+export function isStatus(value: string): value is Status{
+    return value === 'toDo' || value === 'inProgress' || value === 'done';
 }
