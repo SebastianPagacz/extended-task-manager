@@ -1,28 +1,29 @@
 import { isStatus, Priority, Status, Task } from "./task.model";
 
-export function addTask(tasks: Task[], name: string): Task[]{
-    let id = 0; // nie wiem jak dodac statyczne pole skoro nie mam klasy
+export function addTask(tasks: readonly Task[], name: string): Task[]{
+    let unfrozenTasks = tasks.slice();
+    let id = unfrozenTasks.sort((a, b) => b.id - a.id).at(0)?.id ?? 0; // Not the best approach, however I can't think of a better one
     
     if (name.trim() === '' || name.trim() === null){
-        return tasks;
+        return unfrozenTasks;
     }
     id++;
-    return [...tasks, {id: id, name: name, status: 'toDo', priority: 'low', dueDate: undefined, tags: []}];
+    return [...tasks, {id: id, title: name.trim(), status: 'todo', priority: 'low', dueDate: undefined, tags: []}];
 }
 
-export function removeTask(tasks: Task[], id: number): Task[]{
+export function removeTask(tasks: readonly Task[], id: number): Task[]{
     return tasks.filter(task => task.id !== id)
 }
 
-export function updateTask(tasks: Task[], id: number, changes: Partial<Omit<Task, 'id'>>):  Task[]{
+export function updateTask(tasks: readonly Task[], id: number, changes: Partial<Omit<Task, 'id'>>):  Task[]{
     return tasks.map(task => task.id === id ? {...task, ...changes} : task)
 }
 
-export function moveTask(tasks: Task[], id: number, status: string): Task[]{
+export function moveTask(tasks: readonly Task[], id: number, status: string): Task[]{
     if(isStatus(status)){
         return updateTask(tasks, id, { status: status })
     }
-    return tasks;
+    return tasks.slice();
 }
 
 export interface Criteria{
@@ -32,29 +33,29 @@ export interface Criteria{
     hideDone?: boolean,
 }
 
-export function filterTasks(tasks: Task[], cirteria: Criteria): Task[]{
-    let result = tasks;
-    const text = cirteria.text;
-    const hide = cirteria.hideDone;
-
-    if (cirteria === null || cirteria === undefined){
-        return tasks;
+export function filterTasks(tasks: readonly Task[], criteria: Criteria): Task[]{ 
+    if (criteria === undefined){
+        return tasks.slice();
     }
+
+    let result = tasks.slice();
+    const text = criteria.text;
+    const hide = criteria.hideDone;
     
-    if (cirteria.priority){
-        result = result.filter(task => task.priority === cirteria.priority);
+    if (criteria.priority){
+        result = result.filter(task => task.priority === criteria.priority);
     }
 
-    if (cirteria.status){
-        result = result.filter(task => task.status === cirteria.status);
+    if (criteria.status){
+        result = result.filter(task => task.status === criteria.status);
     }
 
     if(text !== undefined && text.trim() !== ''){
-        result = result.filter(task => task.name.toLocaleLowerCase() === text.toLowerCase().trim());
+        result = result.filter(task => task.title.toLocaleLowerCase().includes(text.toLowerCase().trim()));
     }
 
-    if(hide !== undefined && hide){
-        result = result.filter(task => task.status === 'done');
+    if(hide){
+        result = result.filter(task => task.status !== 'done');
     }
 
     return result;
@@ -66,21 +67,45 @@ const priorityNumber : Record<Priority, number> = {
     'high': 2,
 }
 
-export function sort(tasks: Task[]): Task[]{
-    let withDate = tasks
-        .filter(task => task.dueDate)
-        .sort((a, b) => a.dueDate!.getTime() - b.dueDate!.getTime() || priorityNumber[b.priority] - priorityNumber[a.priority]);
-    
-    let withoutDate = tasks
-        .filter(task => !task.dueDate)
-        .sort((a, b) => priorityNumber[b.priority] - priorityNumber[a.priority]);
-
-    return [...withDate, ...withoutDate];
+export function sortTasks(tasks: readonly Task[]): Task[]{
+    return tasks
+        .slice()
+        .sort((a, b) => {
+        if (a.dueDate && b.dueDate){
+            const dateDiff = a.dueDate.getTime() - b.dueDate.getTime()
+            if(dateDiff === 0){
+                return priorityNumber[b.priority] - priorityNumber[a.priority];
+            }
+            return dateDiff;
+        }
+        else{
+            return priorityNumber[b.priority] - priorityNumber[a.priority];
+        }
+    });
 }
 
 export function getDueInDays(due: Date, now: Date = new Date()): number{
+    due.setHours(0, 0, 0, 0);
+    now.setHours(0, 0, 0, 0);
+
     return Math.floor
     (
         (due.getTime() / (1000 * 3600 * 24)) - (now.getTime() / (1000 * 3600 * 24))
-    )
+    );
+}
+
+export function groupBy<T, K extends string>(items: readonly T[], key: (item: T) => K): Partial<Record<K, T[]>>{
+    const result: Partial<Record<K, T[]>> = {};
+
+    for (const item of items){
+        const k = key(item);
+        const group = result[k];
+        if(group){
+            group.push(item);
+        }
+        else{
+            result[k] = [item];
+        }
+    }
+    return result;   
 }
