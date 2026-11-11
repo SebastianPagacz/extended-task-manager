@@ -7,8 +7,8 @@ export function addTask(tasks: readonly Task[], name: string): Task[]{
     if (name.trim() === '' || name.trim() === null){
         return unfrozenTasks;
     }
-    id++;
-    return [...tasks, {id: id, title: name.trim(), status: 'todo', priority: 'low', dueDate: undefined, tags: []}];
+    
+    return [...tasks, {id: id + 1, title: name.trim(), status: 'todo', priority: 'low', dueDate: undefined, tags: []}];
 }
 
 export function removeTask(tasks: readonly Task[], id: number): Task[]{
