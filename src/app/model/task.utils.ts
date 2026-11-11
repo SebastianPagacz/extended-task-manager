@@ -5,7 +5,7 @@ export function addTask(tasks: readonly Task[], name: string): Task[]{
     let id = unfrozenTasks.sort((a, b) => b.id - a.id).at(0)?.id ?? 0; // Not the best approach, however I can't think of a better one
     
     if (name.trim() === '' || name.trim() === null){
-        return unfrozenTasks;
+        return tasks.slice();
     }
     
     return [...tasks, {id: id + 1, title: name.trim(), status: 'todo', priority: 'low', dueDate: undefined, tags: []}];
@@ -78,6 +78,12 @@ export function sortTasks(tasks: readonly Task[]): Task[]{
             }
             return dateDiff;
         }
+        else if(a.dueDate && !b.dueDate){
+            return -1;
+        }
+        else if(b.dueDate && !a.dueDate){
+            return 1;
+        }
         else{
             return priorityNumber[b.priority] - priorityNumber[a.priority];
         }
@@ -85,12 +91,12 @@ export function sortTasks(tasks: readonly Task[]): Task[]{
 }
 
 export function getDueInDays(due: Date, now: Date = new Date()): number{
-    due.setHours(0, 0, 0, 0);
-    now.setHours(0, 0, 0, 0);
+    const newDue = new Date(due.setHours(0, 0, 0, 0));
+    const newNow = new Date(now.setHours(0, 0, 0, 0));
 
-    return Math.floor
+    return Math.round
     (
-        (due.getTime() / (1000 * 3600 * 24)) - (now.getTime() / (1000 * 3600 * 24))
+        (newDue.getTime() / (1000 * 3600 * 24)) - (newNow.getTime() / (1000 * 3600 * 24))
     );
 }
 

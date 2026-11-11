@@ -16,5 +16,5 @@ export function isPriority(value: string): value is Priority{
 }
 
 export function isStatus(value: string): value is Status{
-    return value === 'toDo' || value === 'inProgress' || value === 'done';
+    return value === 'todo' || value === 'doing' || value === 'done';
 }
