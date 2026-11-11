@@ -3,7 +3,7 @@ export type Priority = 'low' | 'medium' | 'high';
 export type Status = 'todo' | 'doing' | 'done';
 
 export interface Task{
-    readonly id: number, // Co zmienia readonly przy nazwie propa i przy typie propa?
+    readonly id: number,
     title: string,
     status: Status,
     priority: Priority,

@@ -2,13 +2,13 @@ import { isStatus, Priority, Status, Task } from "./task.model";
 
 export function addTask(tasks: readonly Task[], name: string): Task[]{
     let unfrozenTasks = tasks.slice();
-    let id = unfrozenTasks.sort((a, b) => b.id - a.id).at(0)?.id ?? 0; // Not the best approach, however I can't think of a better one
+    let id = unfrozenTasks.sort((a, b) => b.id - a.id).at(0)?.id ?? 0;
     
-    if (name.trim() === '' || name.trim() === null){
+    if (name.trim() === ''){
         return tasks.slice();
     }
     
-    return [...tasks, {id: id + 1, title: name.trim(), status: 'todo', priority: 'low', dueDate: undefined, tags: []}];
+    return [...tasks, {id: id + 1, title: name.trim(), status: 'todo', priority: 'low', dueDate: undefined, tags: []}]; // dueDue undefined is more readable for me
 }
 
 export function removeTask(tasks: readonly Task[], id: number): Task[]{
@@ -91,8 +91,10 @@ export function sortTasks(tasks: readonly Task[]): Task[]{
 }
 
 export function getDueInDays(due: Date, now: Date = new Date()): number{
-    const newDue = new Date(due.setHours(0, 0, 0, 0));
-    const newNow = new Date(now.setHours(0, 0, 0, 0));
+    const newDue = new Date(due);
+    const newNow = new Date(now);
+    newDue.setHours(0, 0, 0, 0);
+    newNow.setHours(0, 0, 0, 0);
 
     return Math.round
     (
